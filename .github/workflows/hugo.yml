@@ -46,6 +46,7 @@ jobs:
       - name: Install Dart Sass
         # run: sudo snap install dart-sass
         run: |
+          pwd && \
           curl -LJO https://github.com/sass/dart-sass/releases/download/${DART_SASS_VERSION}/dart-sass-${DART_SASS_VERSION}-linux-x64.tar.gz && \
           tar -xf dart-sass-${DART_SASS_VERSION}-linux-x64.tar.gz && \
           rm dart-sass-${DART_SASS_VERSION}-linux-x64.tar.gz && \
