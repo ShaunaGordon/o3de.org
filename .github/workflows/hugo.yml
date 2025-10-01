@@ -11,3 +11,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: JustinBeckwith/linkinator-action@v1
+        with:
+          linksToSkip: "http://localhost:1313"
