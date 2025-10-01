@@ -14,3 +14,4 @@ jobs:
         with:
           recurse: true
           paths: content/**/*.md
+          linksToSkip: "https://github.com/*"
