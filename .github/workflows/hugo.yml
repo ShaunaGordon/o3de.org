@@ -1,5 +1,4 @@
-a# Sample workflow for building and deploying a Hugo site to GitHub Pages
-name: Deploy Hugo site to Pages
+name: Check dead links
 
 on:
   # Runs on pushes targeting the default branch
