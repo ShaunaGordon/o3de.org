@@ -8,7 +8,7 @@ toc: true
 weight: 400
 ---
 
-**Script Canvas** is O3DE's visual scripting editor. Instead of writing code, you connect nodes with wires to describe behavior. In this step you'll build a graph that reads keyboard input every frame and moves the player sphere by setting its physics velocity.
+**Script Canvas** is O3DE's visual scripting editor. Instead of writing code, you connect nodes with wires to describe behavior. In this step you'll build a graph that responds to keyboard input events and moves the player sphere by setting its physics velocity every frame.
 
 **Estimated time:** ~35 minutes
 
@@ -17,10 +17,13 @@ weight: 400
 The logic is straightforward:
 
 ```
+Input events (Held / Released)
+  → Update per-direction Number variables (1.0 while held, 0.0 on release)
+
 Every frame (On Tick)
-  → Read W/A/S/D input values
-  → Calculate a velocity vector (X = strafe, Z = forward/back)
-  → Set that velocity on the player's PhysX Rigid Body
+  → Read those variables
+  → Calculate a velocity vector (X = strafe, Y = forward/back)
+  → Set that velocity on the player's Rigid Body
 ```
 
 The sphere moves as long as a key is held, and stops the moment you release it.
@@ -33,16 +36,15 @@ O3DE uses a named-event system for input. Before Script Canvas can read key pres
 
 ### 1. Create an Input Bindings asset
 
-1. In the **Asset Browser** panel, navigate to your project's root folder.
-1. Right-click the folder → **New** → **Input Bindings**.
-1. Name the file `PlayerInput` and press **Enter**. The file `PlayerInput.inputbindings` appears in the Asset Browser.
-1. Double-click `PlayerInput.inputbindings` to open the **Input Bindings editor**.
+1. Go to the **Asset Editor** panel. If it's not already open, you can open it by clicking **Tools** → **Asset Editor**.
+1. Click **File** → **New** → **Input Bindings**.
+1. Save the file as `PlayerInput`. The file `PlayerInput.inputbindings` appears in the Asset Browser.
 
 ### 2. Map keys to event names
 
 You'll create four events — one per movement direction.
 
-For each event, choose **Add (+)** to create a new input event group, then fill in the following:
+For each event, choose `+` to create a new input event group, then fill in the following:
 
 | Event name | Key to map |
 |------------|-----------|
@@ -54,11 +56,11 @@ For each event, choose **Add (+)** to create a new input event group, then fill 
 For each event:
 1. Set the **Event Name** field to the name in the table above.
 1. Under **Event Generators**, choose **+** to add a generator.
-1. Set the generator type to **Input Device Keyboard**.
+1. Set the Input Device Type to **Keyboard**.
 1. Set the **Input Name** to the key value from the table (for example, `keyboard_key_alphanumeric_W`).
-1. Set **Event Value Range** to `1.0` (returns 1.0 while held, 0.0 while released).
+1. Set **Event Value Multiplier** to `1.0` (returns 1.0 while held, 0.0 while released).
 
-When done, save the asset: **Ctrl+S**.
+When done, save the asset: **File** → **Save** in the Asset Editor panel.
 
 ### 3. Add an Input component to the Player entity
 
@@ -80,87 +82,106 @@ The Input component activates the bindings for the entity that owns it.
 
 ### 2. Add the On Tick node
 
-The **On Tick** node fires every frame, which is where you'll poll input and update velocity.
+The **On Tick** node fires every frame and drives the velocity calculation.
 
 1. Right-click in the canvas → **Add Node**.
 1. Search for `On Tick` and select it from the **Timing** category.
 
-   This node has a single output execution pin (**Out**) that fires every frame.
+   This node has an **On Tick** execution output pin that fires every frame, plus **Delta** and **Time** data outputs.
 
-### 3. Read input values
+### 3. Create variables for each direction
 
-For each of the four directions, add an **Input: Get Input Event Value** node:
+Because **Input Handler** nodes are event-driven (they fire when a key changes state, not every frame), you need four Number variables to store whether each key is currently held.
 
-1. Right-click the canvas → **Add Node** → search for `Get Input Event Value`.
-1. Select the node from the **Input** category.
+1. Open the **Variables** panel in Script Canvas Editor (View → Variables, or the tab at the bottom).
+1. Click `+` to add a variable, set the type to **Number**, name it `fwd`, and leave the default value as `0.0`.
+1. Repeat for `back`, `left`, and `right`.
+
+### 4. Read input values with Input Handler nodes
+
+For each of the four directions, add an **Input Handler** node:
+
+1. Right-click the canvas → **Add Node** → search for `Input Handler`.
+1. Select it from the **Input** category.
 1. In the node's **Event Name** field, type `MoveForward`.
-1. Connect the **On Tick → Out** pin to the **In** pin of this node.
+1. Drag from the **Held → Out** execution pin, release on an empty area, and search for `set fwd`. Select it to place the setter node. Connect the **Value** data pin to the setter's input, if O3DE has not done so automatically.
+1. Drag from the **Released → Out** execution pin, search for `set fwd`, and place a second setter. Type `0.0` into its value field.
 
-Repeat to add three more nodes with event names `MoveBack`, `MoveLeft`, `MoveRight`. Connect all four **In** pins to the same **On Tick → Out** pin.
+Repeat for the remaining three directions:
+
+| Input Handler Event Name | Variable |
+|--------------------------|----------|
+| `MoveBack` | `back` |
+| `MoveLeft` | `left` |
+| `MoveRight` | `right` |
 
 {{< note >}}
-One execution wire can fan out to multiple nodes. All four input nodes will execute in sequence whenever On Tick fires.
+**Input Handler** nodes are *graph entry points* — they don't connect to **On Tick**. They fire independently whenever the named input event changes state.
 {{< /note >}}
 
-The **Value** output pin of each node returns:
-- `1.0` while the key is held
-- `0.0` when the key is released
-
-### 4. Calculate the velocity components
+### 5. Calculate the velocity components
 
 You need two values:
-- **Z velocity**: forward minus backward (`MoveForward` − `MoveBack`)
-- **X velocity**: right minus left (`MoveRight` − `MoveLeft`)
+- **Y velocity**: forward minus backward (`fwd` − `back`)
+- **X velocity**: right minus left (`right` − `left`)
 
-Add two **Math: Subtract** nodes:
+Add two **Subtract (-)** nodes:
 
-**Z axis (forward/back):**
-1. Right-click → **Add Node** → search `Subtract` → select from **Math**.
-1. Connect `MoveForward → Value` to the first input (**Value 1**).
-1. Connect `MoveBack → Value` to the second input (**Value 2**).
+**Y axis (forward/back):**
+1. Right-click → search `Subtract` → select **Subtract (-)** from the **Math** category.
+1. Right-click an empty area → search `get fwd` → place the getter. Connect its output to the first value input.
+1. Right-click an empty area → search `get back` → place the getter. Connect its output to the second value input.
+1. Connect the **On Tick → On Tick** execution pin to this node's **In** pin.
 
 **X axis (left/right):**
-1. Add a second **Math: Subtract** node.
-1. Connect `MoveRight → Value` to **Value 1**.
-1. Connect `MoveLeft → Value` to **Value 2**.
+1. Add a second **Subtract (-)** node.
+1. Place `get right` and `get left` getters; connect them to the first and second value inputs respectively.
+1. Connect the **On Tick → On Tick** execution pin to this node's **In** pin as well.
 
-### 5. Scale by movement speed
+### 6. Scale by movement speed
 
 Multiply each component by a speed value. `10.0` is a good starting point — you can tune it later.
 
-Add two **Math: Multiply** nodes:
+**Y axis:**
+1. Right-click → search `Multiply` → select **Multiply (*)** from the **Math** category.
+1. Connect **Y Subtract → Out** execution → **Y Multiply In**.
+1. Connect **Y Subtract → Result** data to the first value input. Type `10.0` into the second value input.
 
-1. Connect **Z Subtract → Result** → **Multiply Value 1** → set **Value 2** to `10.0`.
-1. Connect **X Subtract → Result** → **Multiply Value 1** → set **Value 2** to `10.0`.
+**X axis:**
+1. Add a second **Multiply (*)** node.
+1. Connect **X Subtract → Out** execution → **X Multiply In**.
+1. Connect **X Subtract → Result** data to the first value input. Type `10.0` into the second value input.
 
 {{< tip >}}
 To set a constant in a node's input field, click the input pin's data field directly and type the number. You don't need a separate constant node.
 {{< /tip >}}
 
-### 6. Build the velocity Vector3
+### 7. Build the velocity Vector3
 
-Combine the X and Z components into a single 3D vector. Y stays at `0.0` — you don't want to override the vertical velocity, which PhysX uses for gravity.
+Combine the X and Y components into a single 3D vector. Z stays at `0.0` — you don't want to override the vertical velocity, which PhysX uses for gravity.
 
-1. Right-click → **Add Node** → search `Create Vector3` → select it.
+1. Right-click → **Add Node** → search `From Values` → select **Vector3: From Values** from the **Math/Vector3** category.
 1. Connect **X Multiply → Result** → **X**.
-1. Set **Y** to `0.0` (leave the field blank or type 0 — the default).
-1. Connect **Z Multiply → Result** → **Z**.
+1. Connect **Y Multiply → Result** → **Y**.
+1. Leave **Z** as `0.0`.
 
-### 7. Apply velocity to the PhysX Rigid Body
+### 8. Apply velocity to the Rigid Body
 
-1. Right-click → **Add Node** → search `Set Linear Velocity` → select **PhysX Rigid Body: Set Linear Velocity**.
-1. In the **Entity** input of this node, right-click and choose **Set to Self** (or type `Self`) — this targets the entity that owns the script.
-1. Connect **Create Vector3 → Vector3** → **Linear Velocity**.
-1. Connect the execution chain: the last input node's **Out** pin → `Set Linear Velocity → In`.
+1. Right-click → **Add Node** → search `Set Linear Velocity` → select it from the **Rigid Body** category.
+1. In the **Entity** input, right-click and choose **Set to Self** — this targets the entity that owns the script.
+1. Connect **From Values → Vector3** → **Linear Velocity**.
+1. Connect **Y Multiply → Out** execution pin → **Set Linear Velocity → In**.
 
-   Your final execution chain should read:
+   Your execution chains read:
    ```
-   On Tick → MoveForward → MoveBack → MoveLeft → MoveRight → Set Linear Velocity
+   On Tick ─┬─→ Y Subtract (-) → Y Multiply (*) ─→ Set Linear Velocity
+            └─→ X Subtract (-) → X Multiply (*)
    ```
+   Data flows from the variable getters into the math nodes, then into **From Values**, then into **Set Linear Velocity**.
 
-### 8. Save the graph
+### 9. Save the graph
 
-**Ctrl+S** in the Script Canvas Editor.
+**File → Save** in the Script Canvas Editor.
 
 ---
 
@@ -189,7 +210,7 @@ Press **Escape** to exit game mode.
 1. The `Player` entity has both an **Input** component (pointing to `PlayerInput.inputbindings`) and a **Script Canvas** component (pointing to `PlayerMovement.scriptcanvas`).
 2. Asset Processor has finished processing — look for **0 jobs remaining** in the system tray.
 3. In Script Canvas Editor, verify the execution chain connects all nodes. Broken wires (disconnected pins) appear greyed out.
-4. Confirm the event names in the Script Canvas nodes exactly match those in `PlayerInput.inputbindings` — including capitalisation (`MoveForward` ≠ `moveforward`).
+4. Confirm the event names in the **Input Handler** nodes exactly match those in `PlayerInput.inputbindings` — including capitalisation (`MoveForward` ≠ `moveforward`).
 {{< /caution >}}
 
 ---
@@ -198,12 +219,13 @@ Press **Escape** to exit game mode.
 
 | Node | Category | Purpose |
 |------|----------|---------|
-| On Tick | Timing | Fires every frame |
-| Get Input Event Value | Input | Returns 1.0 if the named event is active |
-| Math: Subtract | Math | Calculates directional axis value |
-| Math: Multiply | Math | Scales by movement speed |
-| Create Vector3 | Math | Combines X, Y, Z into a vector |
-| PhysX Rigid Body: Set Linear Velocity | Physics | Applies velocity to the entity |
+| On Tick | Timing | Fires every frame; drives the velocity chain |
+| Input Handler | Input | Sets a variable to 1.0 while held, 0.0 on release |
+| Number variable getters/setters | Variables | Store and read per-direction key state |
+| Subtract (-) | Math | Calculates directional axis value |
+| Multiply (*) | Math | Scales by movement speed |
+| Vector3: From Values | Math/Vector3 | Combines X, Y, Z into a velocity vector |
+| Rigid Body: Set Linear Velocity | Physics | Applies velocity to the entity |
 
 ---
 

@@ -21,11 +21,11 @@ In O3DE, every game object — a character, a platform, a gem — is an **entity
    | Property | Value |
    |----------|-------|
    | **Translate** X | `0` |
-   | **Translate** Y | `1.5` |
-   | **Translate** Z | `0` |
+   | **Translate** Y | `0` |
+   | **Translate** Z | `1.5` |
 
    {{< note >}}
-   In O3DE's coordinate system, **Y is the up axis**. Translating to Y=1.5 places the centre of the sphere just above the ground surface (which has its top face at Y=0.5 after scaling in the previous step).
+   In O3DE's coordinate system, **Z is the up axis**. Translating to Z=1.5 places the center of the sphere just above the ground surface (which has its top face at Y=0.5 after scaling in the previous step).
    {{< /note >}}
 
 ---
@@ -47,10 +47,10 @@ In O3DE, every game object — a character, a platform, a gem — is an **entity
 
 A **PhysX Rigid Body** makes the entity respond to gravity and collisions. Without it, the sphere would stay frozen in space.
 
-1. Choose **Add Component** → search for `PhysX Rigid Body` → select it.
-1. In the **PhysX Rigid Body** component, configure the following settings to prevent the sphere from rolling and tumbling:
+1. Choose **Add Component** → search for `PhysX Dynamic Rigid Body` → select it.
+1. In the **PhysX Dynamic Rigid Body** component, configure the following settings to prevent the sphere from rolling and tumbling:
 
-   **Lock Angular Motion** (under the *Constraints* section):
+   **Angular Axis Locking**:
 
    | Axis | Setting |
    |------|---------|
@@ -68,15 +68,18 @@ A **PhysX Rigid Body** makes the entity respond to gravity and collisions. Witho
 
 A PhysX Collider defines the physical shape the physics engine uses for collision detection. It doesn't have to match the visual mesh exactly — for a sphere, use a sphere shape.
 
-1. Choose **Add Component** → search for `PhysX Collider` → select it.
-1. In the **PhysX Collider** component, set:
+1. Choose **Add Component** → search for `PhysX Shape Collider` → select it.
+1. In the **PhysX Shape Collider** component, click `Add Required Component` and select `Sphere Shape`.
+1. In the **Sphere Shape** component, ensure:
 
    | Property | Value |
    |----------|-------|
-   | **Shape** | Sphere |
    | **Radius** | `0.5` |
+   | **Translation Offset** X | 0 |
+   | **Translation Offset** Y | 0 |
+   | **Translation Offset** Z | 0.5 |
 
-   A radius of `0.5` matches the unit sphere mesh's size.
+   A radius of `0.5` matches the unit sphere mesh's size, while a translation offset of `0.5` aligns it with the entity's mesh.
 
 ---
 
@@ -85,7 +88,7 @@ A PhysX Collider defines the physical shape the physics engine uses for collisio
 Tags let scripts identify entities without hardcoding names. The gem collection script (Step 5) uses a tag to check whether it's the player entering the trigger volume.
 
 1. Choose **Add Component** → search for `Tag` → select it.
-1. In the **Tag** component, choose the **+** button and type `Player`.
+1. In the **Tag** component, choose the `+` button and type `Player`.
 
 ---
 

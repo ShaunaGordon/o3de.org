@@ -8,13 +8,13 @@ toc: true
 weight: 200
 ---
 
-A **level** is O3DE's name for a scene — it holds all the entities, lighting, and environment settings for one area of your game. In this step you'll create a fresh level and add a ground plane so the player has somewhere to stand.
+A **level** is O3DE's name for a scene — it holds all the entities, lighting, and environment settings for one area of your game. In this step you'll create a fresh level and add a ground plane, so the player has somewhere to stand.
 
 **Estimated time:** ~20 minutes
 
 ## 1. Create a new level
 
-1. In O3DE Editor, go to **File → New Level**.
+1. In O3DE Editor, go to **File → New Level** and select the Basic Level.
 
 1. Name the level `GemCollectorLevel` and choose **OK**.
 
@@ -37,7 +37,7 @@ Before adding anything, get comfortable with moving around:
 | Fly-cam (move and look) | Hold **Right Mouse Button**, then use **W A S D** |
 | Pan | Hold **Middle Mouse Button** and drag |
 | Orbit around a selection | Hold **Alt**, then drag with the left mouse button |
-| Focus on a selected entity | Press **F** |
+| Focus on a selected entity | Press **Z** |
 | Zoom in/out | Scroll wheel |
 
 ---
@@ -58,20 +58,20 @@ You'll build the ground from a primitive cube, scaled to create a flat arena.
 1. In the **Mesh** component, click the folder icon next to **Mesh Asset** and browse to:
 
    ```
-   objects/primitive_cube.azmodel
+   Objects/_Primitives/_Box_1x1.fbx
    ```
 
-   This is a built-in cube mesh provided by the engine. If you don't see it, make sure the **Asset Processor** has finished its initial scan.
+   This is a built-in box mesh provided by the **PrimitiveAssets** gem. If you don't see it, make sure the **Asset Processor** has finished its initial scan.
 
 **Scale and position it:**
 
 1. With `Ground` still selected, find the **Transform** component at the top of the Entity Inspector.
-1. Set the following values:
+1. Click `Add non-uniform scale`, then set the following values:
 
    | Property | Value |
    |----------|-------|
    | **Translate** X, Y, Z | `0`, `0`, `0` |
-   | **Scale** X, Y, Z | `50`, `1`, `50` |
+   | **Scale** X, Y, Z | `50`, `50`, `1` |
 
    This creates a flat arena 50 units wide and 50 units deep, 1 unit tall.
 
@@ -81,7 +81,7 @@ Without a PhysX collider, the player sphere will fall straight through the groun
 
 1. Choose **Add Component** → search for `PhysX Static Rigid Body` → select it.
 1. Choose **Add Component** → search for `PhysX Mesh Collider` → select it.
-1. In the **PhysX Mesh Collider** component, set **PhysX Mesh** to the same asset: `objects/primitive_cube.azmodel`.
+1. In the **PhysX Mesh Collider** component, set **PhysX Mesh** to the same asset: `Objects/_Primitives/_Box_1x1.fbx`.
 
    {{< note >}}
    **PhysX Static Rigid Body** tells the physics engine this object never moves. **PhysX Mesh Collider** gives it a physical shape. Both are required for a solid, stationary surface.
@@ -91,7 +91,7 @@ Without a PhysX collider, the player sphere will fall straight through the groun
 
 ## 4. Adjust your view
 
-Press **F** with the `Ground` entity selected to frame it in view. Use the fly-cam controls to position your camera above the ground looking down — this gives you a good working view for placing objects in later steps.
+Press **Z** with the `Ground` entity selected to frame it in view. Use the fly-cam controls to position your camera above the ground looking down — this gives you a good working view for placing objects in later steps.
 
 ---
 
