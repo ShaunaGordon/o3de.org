@@ -8,9 +8,13 @@ toc: true
 
 Learn the features, tools, and processes of **Open 3D Engine (O3DE)** with the help of step-by-step, guided tutorials.
 
-## Looking to get started?
+## Quickstart
 
-Do you have O3DE installed and you aren't sure where to start? Then [try the follow-alongs](/docs/learning-guide/samples/follow-along/). These easy guide videos will walk you through the creation of basic games like Pong to get you familiar with the O3DE interface and tools.
+New to O3DE? Start here. Build a complete game from scratch in about 4 hours — no coding required.
+
+| Tutorial | Description |
+| - | - |
+| [Build Your First Game: Gem Collector](quickstart/) | Install O3DE, create a project, and build a playable top-down game with WASD movement and collectible items using entities, PhysX, and Script Canvas. |
 
 ## Animation
 
